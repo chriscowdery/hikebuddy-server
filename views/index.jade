@@ -1,0 +1,18 @@
+extends layout
+
+block content
+  h1 Hikers
+  table(class="table table-striped")
+     thead
+      tr
+        td Name
+        td Latitude
+        td Longitude
+        td Last Updated
+     tbody
+       each hiker in hikers
+         tr
+          td= hiker.name
+          td= hiker.latitude
+          td= hiker.longitude
+          td= hiker.lastUpdated
