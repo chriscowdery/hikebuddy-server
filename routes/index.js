@@ -97,6 +97,9 @@ function signalStrengthForRemoteAddress(remoteAddress)
         ip = remoteAddress.substring(indexOfColon + 1, remoteAddress.length);
     }
 
+    console.log("signal strength");
+    console.log("Detected IP:" + ip);
+
     // Functionality only supported on production HW
     if (pathname.substring(0, 11) != "192.168.42.") {
         return "Unknown";
@@ -105,8 +108,12 @@ function signalStrengthForRemoteAddress(remoteAddress)
     // Look up MAC via ARP
     var macAddress = p_execSync("/usr/sbin/arp | /bin/grep " + ip + " /usr/bin/awk '{print $3}'");
 
+    console.log("mac:" + macAddress);
+
     // Then use iw to get the current dBm
     var signaldBm = parseInt(p_execSync("/sbin/iw wlan0 station get " + macAddress + " | /bin/grep 'signal:' | /usr/bin/awk '{print $2}'"));
+
+    console.log("dbm:" + signaldBm);
 
     // http://www.metageek.com/training/resources/understanding-rssi.html
     var strength = {};
