@@ -8,6 +8,7 @@ block content
         td Name
         td Latitude
         td Longitude
+        td Signal Strength
         td Last Updated
      tbody
        each hiker in hikers
@@ -15,4 +16,5 @@ block content
           td= hiker.name
           td= hiker.latitude
           td= hiker.longitude
+          td= hiker.signal_stength
           td= hiker.lastUpdated
