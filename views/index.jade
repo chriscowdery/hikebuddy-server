@@ -16,5 +16,8 @@ block content
           td= hiker.name
           td= hiker.latitude
           td= hiker.longitude
-          td= hiker.signal_stength
+          td
+             span=hiker.signal_stength.scale
+             span(style="margin-left:10px")=hiker.signal_strength.human_readable
+             span(style="margin-left:10px")=hiker.signal_stength.signaldBm
           td= hiker.lastUpdated

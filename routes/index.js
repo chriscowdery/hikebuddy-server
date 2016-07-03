@@ -97,23 +97,31 @@ function signalStrengthForRemoteAddress(remoteAddress)
         ip = remoteAddress.substring(indexOfColon + 1, remoteAddress.length);
     }
 
-    console.log("signal strength");
-    console.log("Detected IP:" + ip);
+    //console.log("signal strength");
+    //console.log("Detected IP:" + ip);
 
     // Functionality only supported on production HW
-    if (pathname.substring(0, 11) != "192.168.42.") {
+    if (remoteAddress.substring(0, 11) != "192.168.42.") {
         return "Unknown";
     }
 
     // Look up MAC via ARP
-    var macAddress = p_execSync("/usr/sbin/arp | /bin/grep " + ip + " /usr/bin/awk '{print $3}'");
+    var macAddress = "Unknown";
 
-    console.log("mac:" + macAddress);
+    try {
+        macAddress = p_execSync("arp | grep " + ip + " | awk '{print $3}'");
+    }
+    catch (err) {
+        console.log(err);
+        console.log(err.message);
+    }
+
+    //console.log("mac:" + macAddress);
 
     // Then use iw to get the current dBm
-    var signaldBm = parseInt(p_execSync("/sbin/iw wlan0 station get " + macAddress + " | /bin/grep 'signal:' | /usr/bin/awk '{print $2}'"));
+    var signaldBm = parseInt(p_execSync("iw wlan0 station get " + macAddress + " | grep 'signal:' | awk '{print $2}'"));
 
-    console.log("dbm:" + signaldBm);
+    //console.log("dbm:" + signaldBm);
 
     // http://www.metageek.com/training/resources/understanding-rssi.html
     var strength = {};
@@ -121,25 +129,31 @@ function signalStrengthForRemoteAddress(remoteAddress)
     strength["signaldBm"] = signaldBm;
 
     if (signaldBm >= -30) {
-        strength["human_readable"] = "5/5 - Amazing";
+        strength["scale"] = 1;
+        strength["human_readable"] = "Fucking Amazing";
     }
     else if (signaldBm >= -50) {
-        strength["human_readable"] = "4/5 - Great";
+        strength["scale"] = 0.8;
+        strength["human_readable"] = "Alright";
     }
     else if (signaldBm >= -60) {
-        strength["human_readable"] = "3/5 - Very Good";
+        strength["scale"] = 0.6;
+        strength["human_readable"] = "Cromulent";
     }
     else if (signaldBm >= -70) {
-        strength["human_readable"] = "2/5 - Okay";
+        strength["scale"] = 0.4;
+        strength["human_readable"] = "Respectable";
     }
     else if (signaldBm >= -80) {
-        strength["human_readable"] = "1/5 - Awful";
+        strength["scale"] = 0.2;
+        strength["human_readable"] = "Fucking Awful";
     }
     else {
-        strength["human_readable"] = "0/5 - DANGER ZONE";
+        strength["scale"] = 0.0;
+        strength["human_readable"] = "DANGER ZONE";
     }
 
-    return strength["human_readable"];
+    return strength;
 }
 
 function p_execSync(command)
