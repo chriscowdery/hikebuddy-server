@@ -8,6 +8,7 @@ block content
         td Name
         td Latitude
         td Longitude
+        td Battery Level
         td Signal Strength
         td Last Updated
      tbody
@@ -16,6 +17,7 @@ block content
           td= hiker.name
           td= hiker.latitude
           td= hiker.longitude
+          td= hiker.batteryLevel
           td
              span=hiker.signal_stength.scale
              span(style="margin-left:10px")=hiker.signal_stength.human_readable

@@ -54,6 +54,8 @@ router.post('/add_hiker', function(req, res, next) {
 
     hikerObj["latitude"] = req.body.latitude;
 
+    hikerObj["batteryLevel"] = req.body.batteryLevel;
+
     if (req.body.longitude == null) {
 
         var failResponse = {};
@@ -97,56 +99,41 @@ function signalStrengthForRemoteAddress(remoteAddress)
         ip = remoteAddress.substring(indexOfColon + 1, remoteAddress.length);
     }
 
-    //console.log("signal strength");
-    //console.log("Detected IP:" + ip);
-
     // Functionality only supported on production HW
     if (remoteAddress.substring(0, 11) != "192.168.42.") {
         return "Unknown";
     }
 
     // Look up MAC via ARP
-    var macAddress = "Unknown";
-
-    try {
-        macAddress = p_execSync("arp | grep " + ip + " | awk '{print $3}'");
-    }
-    catch (err) {
-        console.log(err);
-        console.log(err.message);
-    }
-
-    //console.log("mac:" + macAddress);
+    var macAddress = p_execSync("arp | grep " + ip + " | awk '{print $3}'");
 
     // Then use iw to get the current dBm
     var signaldBm = parseInt(p_execSync("iw wlan0 station get " + macAddress + " | grep 'signal:' | awk '{print $2}'"));
-
-    //console.log("dbm:" + signaldBm);
 
     // http://www.metageek.com/training/resources/understanding-rssi.html
     var strength = {};
 
     strength["signaldBm"] = signaldBm;
 
-    if (signaldBm >= -30) {
+    if (signaldBm >= -50) {
         strength["scale"] = 1;
         strength["human_readable"] = "Fucking Amazing";
     }
-    else if (signaldBm >= -50) {
-        strength["scale"] = 0.8;
-        strength["human_readable"] = "Alright";
-    }
     else if (signaldBm >= -60) {
-        strength["scale"] = 0.6;
-        strength["human_readable"] = "Cromulent";
+        strength["scale"] = 0.8;
+        strength["human_readable"] = "Amazing";
     }
     else if (signaldBm >= -70) {
-        strength["scale"] = 0.4;
-        strength["human_readable"] = "Respectable";
+        strength["scale"] = 0.6;
+        strength["human_readable"] = "Wonderful";
     }
     else if (signaldBm >= -80) {
+        strength["scale"] = 0.4;
+        strength["human_readable"] = "Good";
+    }
+    else if (signaldBm >= -90) {
         strength["scale"] = 0.2;
-        strength["human_readable"] = "Fucking Awful";
+        strength["human_readable"] = "Not Good";
     }
     else {
         strength["scale"] = 0.0;
@@ -219,6 +206,8 @@ router.post('/update_hiker/:id', function(req, res, next) {
 
     hikerObj["longitude"] = req.body.longitude;
 
+    hikerObj["batteryLevel"] = req.body.batteryLevel;
+
     // Optional
     hikerObj["signal_stength"] = signalStrengthForRemoteAddress(req.connection.remoteAddress);
 
@@ -259,8 +248,19 @@ router.post('/update_hiker/:id', function(req, res, next) {
     successResponse["status"] = "ok";
     successResponse["new_messages"] = newMessages;
 
+    logHikerUpdate(hikerObj);
+
     res.send(JSON.stringify(successResponse));
 });
+
+var fs = require('fs');
+var log_file = fs.createWriteStream('/Users/chris/Desktop/HikeBuddyServerLogs/log.txt', {flags : 'w'});
+
+function logHikerUpdate(hikerObj)
+{
+    var string = hikerObj["name"] + " (" + hikerObj["lastUpdated"] + ") - Location:" + hikerObj["latitude"] + "," + hikerObj["longitude"] + " Signal:" + hikerObj["signal_stength"]["signaldBm"] + " Bat:" +  hikerObj["batteryLevel"];
+    log_file.write(util.format(string) + '\n');
+}
 
 router.get('/messageStatus/:id', function(req, res, next) {
 
